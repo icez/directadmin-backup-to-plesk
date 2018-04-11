@@ -45,8 +45,15 @@ for domain in $(ls -1); do
 	fi
 	if [ -d $docroot ]; then
 		echo "found webroot $docroot"
+		if [ -f $docroot/index.html ]; then
+			lines=$(grep -i "Domain Default page" $docroot/index.html | wc -l)
+			if [ $lines -gt 0 ]; then
+				rm -fv $docroot/index.html
+			fi
+		fi
 		chown -R $siteuid $backuppath/domains/$domain/public_html
 		rsync -av $backuppath/domains/$domain/public_html/ $docroot
+		find $docroot -type f -name .htaccess -exec grep -l php_ {} \; | xargs perl -pi -e 's/^php_/#php_/'
 	fi
 	if [ -f $backuppath/backup/$domain/email/passwd ]; then
 		for emailaccount in $(cat $backuppath/backup/$domain/email/passwd | cut -d: -f1); do
